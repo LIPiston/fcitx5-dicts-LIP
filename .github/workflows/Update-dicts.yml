@@ -27,36 +27,10 @@ jobs:
         sudo apt-get update && sudo apt-get install -y dotnet-sdk-8.0
         dotnet publish/ImeWlConverterCmd.dll -i:scel downloaded_hotwords.scel -os:linux -o:libpy cn_dicts/hotwords.dict
 
-    - name: Zip cn_dicts
+    - name: Commit changes
       run: |
-        mkdir -p dist
-        zip -j dist/cn_dicts.zip cn_dicts/*
-
-    - name: Get current time
-      id: time
-      uses: gerred/actions/current-time@master
-      with:
-        format: '%Y-%m-%d %H:%M:%S'
-
-    - name: Delete existing nightly release
-      if: ${{ github.ref == 'refs/heads/master' }}
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        gh release delete nightly -y || echo "No existing nightly release to delete"
-
-    - name: Create nightly release
-      if: ${{ github.ref == 'refs/heads/master' }}
-      uses: "softprops/action-gh-release@v2"
-      with:
-        body: |
-          ## 说明
-
-          这里是每次提交后自动打包的版本，包含最新的功能和词库
-          📅 构建时间：${{ steps.time.outputs.time }}
-
-          - `cn_dicts.zip`：中文词库
-        tag_name: nightly
-        name: "nightly build"
-        files: |
-          dist/*
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add cn_dicts/*
+        git commit -m "Auto: Update dicts $(date +'%Y-%m-%d')" || echo "No changes to commit"
+        git push
